@@ -32,6 +32,55 @@ jobs:
           mkdir -p project
           tar -xJf project.tar.xz -C project
           test -f project/project.godot
+
+          # Start every Android build from clean generated state.
+          rm -rf project/.godot project/.import project/android
+
+          # Gradle/Godot Android asset merging can choke on non-ASCII resource paths.
+          # Rename the two Cyrillic resources and update every textual reference.
+          python3 - <<'PY'
+          from pathlib import Path
+
+          root = Path("project")
+          renames = {
+              "труба зеленая.gd": "pipe_green.gd",
+              "труба зеленая.tscn": "pipe_green.tscn",
+          }
+
+          for old_name, new_name in renames.items():
+              old = root / old_name
+              new = root / new_name
+              if old.exists():
+                  old.rename(new)
+                  print(f"renamed: {old_name} -> {new_name}")
+
+          text_suffixes = {".gd", ".tscn", ".godot", ".cfg", ".tres"}
+          for path in root.rglob("*"):
+              if not path.is_file() or path.suffix.lower() not in text_suffixes:
+                  continue
+              try:
+                  text = path.read_text(encoding="utf-8")
+              except UnicodeDecodeError:
+                  continue
+              updated = text
+              for old_name, new_name in renames.items():
+                  updated = updated.replace(old_name, new_name)
+              if updated != text:
+                  path.write_text(updated, encoding="utf-8", newline="\n")
+                  print(f"updated refs: {path}")
+
+          remaining_non_ascii = [
+              str(path.relative_to(root))
+              for path in root.rglob("*")
+              if any(ord(ch) > 127 for ch in path.name)
+          ]
+          if remaining_non_ascii:
+              raise SystemExit("Non-ASCII project paths remain: " + ", ".join(remaining_non_ascii))
+          PY
+
+          test -f project/pipe_green.gd
+          test -f project/pipe_green.tscn
+          grep -R -n 'pipe_green.tscn' project --include='*.tscn' --include='*.gd' || true
           grep -F 'run/main_scene="res://start.tscn"' project/project.godot
           grep -F 'config/features=PackedStringArray("4.1", "Mobile")' project/project.godot
           sed -i 's/package\/show_as_launcher_app=false/package\/show_as_launcher_app=true/' project/export_presets.cfg

@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://befivrxieqlnq"]
 
-[ext_resource type="Texture2D" uid="uid://c2fwj2rlo1pm5" path="res://pipe-green.png" id="1_1n1yv"]
+[ext_resource type="Texture2D" path="res://pipe-green.png" id="1_green"]
 [ext_resource type="Script" path="res://pipe_green.gd" id="1_yyhsp"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_score"]
@@ -16,7 +16,7 @@ scale = Vector2(1.05, 2.5)
 polygon = PackedVector2Array(-24, -158, 25, -158, 25, -137, 20, -137, 25, 158, 19, 161, -22, 161, -23, -136)
 
 [node name="Sprite2D" type="Sprite2D" parent="BottomPipe"]
-texture = ExtResource("1_1n1yv")
+texture = ExtResource("1_green")
 
 [node name="TopPipe" type="StaticBody2D" parent="." groups=["pipe"]]
 scale = Vector2(1.05, 2.5)
@@ -25,7 +25,7 @@ scale = Vector2(1.05, 2.5)
 polygon = PackedVector2Array(-24, -158, 25, -158, 25, -137, 20, -137, 25, 158, 19, 161, -22, 161, -23, -136)
 
 [node name="Sprite2D" type="Sprite2D" parent="TopPipe"]
-texture = ExtResource("1_1n1yv")
+texture = ExtResource("1_green")
 flip_v = true
 
 [node name="ScoreArea" type="Area2D" parent="."]

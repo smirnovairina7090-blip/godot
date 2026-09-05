@@ -1,0 +1,124 @@
+[gd_scene load_steps=15 format=3 uid="uid://bjqmoq2unbyhb"]
+
+[ext_resource type="Script" path="res://node_2d.gd" id="1_3n334"]
+[ext_resource type="Script" path="res://CharacterBody2D.gd" id="1_uq3xh"]
+[ext_resource type="Texture2D" uid="uid://mrlv2luheiye" path="res://bluebird-downflap.png" id="2_yfkwf"]
+[ext_resource type="Texture2D" uid="uid://dig6vu1hfbr61" path="res://bluebird-midflap.png" id="3_a2lmx"]
+[ext_resource type="Script" path="res://ParallaxBackground.gd" id="3_qb5h4"]
+[ext_resource type="Texture2D" uid="uid://bturr7jh2ymrd" path="res://background-day.png" id="4_bb5t5"]
+[ext_resource type="Texture2D" uid="uid://bt3tq4spw5vuw" path="res://bluebird-upflap.png" id="4_d6d0m"]
+[ext_resource type="Texture2D" uid="uid://7y3wvulc8bk5" path="res://base.png" id="5_2c8qx"]
+[ext_resource type="AudioStream" uid="uid://d2pu0l6qm32ph" path="res://audio_die_trimmed.ogg" id="7_1eyqx"]
+[ext_resource type="PackedScene" uid="uid://befivrxieqlnq" path="res://pipe_green.tscn" id="8_ukk3l"]
+[ext_resource type="FontFile" uid="uid://cugo8r1iikxqh" path="res://04B_19__.TTF" id="10_t6am0"]
+[ext_resource type="Texture2D" uid="uid://chq4roo3hhvp7" path="res://gameover.png" id="11_gibi1"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_eo5xr"]
+animations = [{
+"frames": [{"duration": 1.0, "texture": ExtResource("2_yfkwf")}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("2_yfkwf")}, {"duration": 1.0, "texture": ExtResource("3_a2lmx")}, {"duration": 1.0, "texture": ExtResource("4_d6d0m")}],
+"loop": true,
+"name": &"flap",
+"speed": 10.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
+size = Vector2(540, 112)
+
+[node name="Node2D" type="Node2D"]
+script = ExtResource("1_3n334")
+scene = ExtResource("8_ukk3l")
+
+[node name="ParallaxBackground" type="ParallaxBackground" parent="."]
+script = ExtResource("3_qb5h4")
+max_speed = 25.0
+
+[node name="ParallaxLayer" type="ParallaxLayer" parent="ParallaxBackground"]
+motion_mirroring = Vector2(540, 0)
+
+[node name="Background" type="Sprite2D" parent="ParallaxBackground/ParallaxLayer"]
+texture_filter = 1
+texture = ExtResource("4_bb5t5")
+centered = false
+
+[node name="ParallaxBackground2" type="ParallaxBackground" parent="."]
+layer = 1
+script = ExtResource("3_qb5h4")
+max_speed = 170.0
+
+[node name="ParallaxLayer2" type="ParallaxLayer" parent="ParallaxBackground2"]
+z_index = 20
+motion_mirroring = Vector2(540, 0)
+
+[node name="Ground" type="Sprite2D" parent="ParallaxBackground2/ParallaxLayer2"]
+z_index = 1000
+texture = ExtResource("5_2c8qx")
+centered = false
+
+[node name="CharacterBody2D" type="CharacterBody2D" parent="."]
+z_index = 30
+position = Vector2(150, 430)
+scale = Vector2(0.11, 0.11)
+script = ExtResource("1_uq3xh")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="CharacterBody2D"]
+scale = Vector2(20, 20)
+sprite_frames = SubResource("SpriteFrames_eo5xr")
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="CharacterBody2D"]
+position = Vector2(33.3334, -73.3335)
+polygon = PackedVector2Array(-133.333, -166.667, 106.667, -166.667, 106.667, -126.667, 146.667, -126.667, 146.667, -93.3333, 180, -86.6665, 186.667, -53.3333, 226.667, -46.6665, 226.667, 66.6667, 266.667, 73.3335, 266.667, 113.333, 306.667, 113.333, 306.667, 153.333, 266.667, 153.333, 266.667, 233.333, 226.667, 233.333, 226.667, 273.333, 26.6666, 273.333, 26.6666, 313.333, -173.333, 313.333, -173.333, 273.333, -333.333, 273.333, -333.333, 233.333, -380, 233.333, -373.333, 113.333, -333.333, 113.333, -333.333, -6.6665, -293.333, -6.6665, -293.333, -53.3333, -253.333, -53.3333, -253.333, -86.6665, -220, -86.6665, -213.333, -126.667, -140, -126.667)
+
+[node name="GroundBody" type="StaticBody2D" parent="."]
+position = Vector2(270, 904)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundBody"]
+shape = SubResource("RectangleShape2D_ground")
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 1.65
+autostart = false
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Label" type="Label" parent="CanvasLayer"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -43.0
+offset_top = 50.0
+offset_right = 43.0
+offset_bottom = 129.0
+grow_horizontal = 2
+theme_override_fonts/font = ExtResource("10_t6am0")
+theme_override_font_sizes/font_size = 75
+text = "0"
+horizontal_alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -144.0
+offset_top = -31.5
+offset_right = 144.0
+offset_bottom = 31.5
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("11_gibi1")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("7_1eyqx")
+volume_db = 1.0
+
+[connection signal="animation_finished" from="CharacterBody2D/AnimatedSprite2D" to="CharacterBody2D" method="_on_animated_sprite_2d_animation_finished"]
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

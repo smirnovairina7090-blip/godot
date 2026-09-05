@@ -95,15 +95,6 @@ jobs:
           touch project/android/build/.gdignore
           printf '4.1.2.stable\n' > project/android/.build_version
           unzip -q ~/.local/share/godot/export_templates/4.1.2.stable/android_source.zip -d project/android/build
-          cat > project/android/build/ci-init.gradle <<'EOF'
-          gradle.projectsEvaluated {
-              allprojects {
-                  tasks.matching { it.name == "mergeDebugAssets" }.configureEach {
-                      doNotTrackState("Godot generates the Android assets directory during export")
-                  }
-              }
-          }
-          EOF
           mv project/android/build/gradlew project/android/build/gradlew-real
           cat > project/android/build/gradlew <<'EOF'
           #!/bin/sh
@@ -113,7 +104,7 @@ jobs:
             sed -i 's#android:excludeFromRecents="false" android:screenOrientation=#android:exported="true" android:excludeFromRecents="false" android:screenOrientation=#' "$MANIFEST"
           fi
           export GRADLE_OPTS="${GRADLE_OPTS:-} -Dfile.encoding=UTF-8"
-          "$ROOT/gradlew-real" "$@" -I "$ROOT/ci-init.gradle" --stacktrace --console=plain > "$ROOT/gradle-output.log" 2>&1
+          "$ROOT/gradlew-real" "$@" --info --stacktrace --console=plain > "$ROOT/gradle-output.log" 2>&1
           exit $?
           EOF
           chmod +x project/android/build/gradlew project/android/build/gradlew-real

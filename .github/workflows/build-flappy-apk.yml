@@ -25,7 +25,7 @@ jobs:
         shell: bash
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends xz-utils python3
+          apt-get install -y --no-install-recommends xz-utils python3 unzip
           cat project.b64.01 project.b64.02 project.b64.03 project.b64.04 project.b64.05 project.b64.06 project.b64.07 project.b64.08 > project.tar.xz.b64
           base64 -d project.tar.xz.b64 > project.tar.xz
           echo "1c9efbafa034682680c34992a3dc38d108aba28b2115d3e7999a551be279e1af  project.tar.xz" | sha256sum -c -
@@ -35,7 +35,9 @@ jobs:
           grep -F 'run/main_scene="res://start.tscn"' project/project.godot
           grep -F 'config/features=PackedStringArray("4.1", "Mobile")' project/project.godot
           sed -i 's/package\/show_as_launcher_app=false/package\/show_as_launcher_app=true/' project/export_presets.cfg
+          sed -i 's/gradle_build\/use_gradle_build=false/gradle_build\/use_gradle_build=true/' project/export_presets.cfg
           sed -i '/^\[rendering\]$/a textures/vram_compression/import_etc2_astc=true' project/project.godot
+          grep -F 'gradle_build/use_gradle_build=true' project/export_presets.cfg
 
       - name: Generate Android PNG icons
         shell: bash
@@ -67,7 +69,7 @@ jobs:
           sed -i 's#launcher_icons/adaptive_background_432x432=""#launcher_icons/adaptive_background_432x432="res://icon-adaptive-background.png"#' project/export_presets.cfg
           sed -i 's#config/icon="res://icon.svg"#config/icon="res://icon-main.png"#' project/project.godot || true
 
-      - name: Setup Godot 4.1 Android environment
+      - name: Setup Godot 4.1 Android environment and Gradle template
         shell: bash
         run: |
           mkdir -p ~/.local/share/godot/export_templates
@@ -90,13 +92,18 @@ jobs:
           export/android/force_system_user = false
           export/android/shutdown_adb_on_exit = true
           EOF
+          mkdir -p project/android/build project/android/plugins
+          touch project/android/build/.gdignore
+          printf '4.1.2.stable\n' > project/android/.build_version
+          unzip -q ~/.local/share/godot/export_templates/4.1.2.stable/android_source.zip -d project/android/build
+          test -f project/android/build/gradlew
+          chmod +x project/android/build/gradlew
+          printf 'sdk.dir=/usr/lib/android-sdk\n' > project/android/build/local.properties
           echo "JAVA_HOME_REAL=$JAVA_HOME_REAL"
-          cat ~/.config/godot/editor_settings-4.tres
           godot --version
           java -version
           test -d /usr/lib/android-sdk
           test -f /root/debug.keystore
-          keytool -list -keystore /root/debug.keystore -storepass android -alias androiddebugkey
 
       - name: Import project resources
         shell: bash

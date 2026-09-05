@@ -179,7 +179,7 @@ jobs:
         run: |
           export PATH="$JAVA_HOME/bin:$PATH"
           mkdir -p project/build
-          godot --headless --verbose --path project --export-debug "Android" project/build/flappy-debug.apk || true
+          godot --headless --verbose --path project --export-debug "Android" build/flappy-debug.apk || true
           if [ ! -s project/build/flappy-debug.apk ]; then
             echo "Gradle build log follows:"
             cat project/android/build/gradle-output.log || true

@@ -66,7 +66,7 @@ jobs:
           sed -i 's#launcher_icons/adaptive_background_432x432=""#launcher_icons/adaptive_background_432x432="res://icon-adaptive-background.png"#' project/export_presets.cfg
           sed -i 's#config/icon="res://icon.svg"#config/icon="res://icon-main.png"#' project/project.godot || true
 
-      - name: Setup Godot 4.1 Android environment and Gradle template
+      - name: Setup Godot Android environment and Gradle wrapper
         shell: bash
         run: |
           export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
@@ -95,7 +95,18 @@ jobs:
           touch project/android/build/.gdignore
           printf '4.1.2.stable\n' > project/android/.build_version
           unzip -q ~/.local/share/godot/export_templates/4.1.2.stable/android_source.zip -d project/android/build
-          chmod +x project/android/build/gradlew
+          mv project/android/build/gradlew project/android/build/gradlew-real
+          cat > project/android/build/gradlew <<'EOF'
+          #!/bin/sh
+          ROOT="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+          MANIFEST="$ROOT/src/debug/AndroidManifest.xml"
+          if [ -f "$MANIFEST" ]; then
+            sed -i 's#android:excludeFromRecents="false" android:screenOrientation=#android:exported="true" android:excludeFromRecents="false" android:screenOrientation=#' "$MANIFEST"
+          fi
+          "$ROOT/gradlew-real" "$@" --stacktrace --console=plain > "$ROOT/gradle-output.log" 2>&1
+          exit $?
+          EOF
+          chmod +x project/android/build/gradlew project/android/build/gradlew-real
           printf 'sdk.dir=/usr/lib/android-sdk\n' > project/android/build/local.properties
           java -version
           test -d /usr/lib/android-sdk/platforms/android-33
@@ -121,7 +132,15 @@ jobs:
         run: |
           export PATH="$JAVA_HOME/bin:$PATH"
           mkdir -p project/build
+          set +e
           godot --headless --verbose --path project --export-debug "Android" project/build/flappy-debug.apk
+          STATUS=$?
+          set -e
+          if [ "$STATUS" -ne 0 ]; then
+            echo "=== Gradle output ==="
+            cat project/android/build/gradle-output.log || true
+            exit "$STATUS"
+          fi
           test -s project/build/flappy-debug.apk
           ls -lh project/build/flappy-debug.apk
 

@@ -1,7 +1,7 @@
 extends Node2D
 
 @export var max_speed = 170.0
-@export var gap_size = 225.0
+@export var gap_size = 300.0
 @onready var top_pipe = $TopPipe
 @onready var bottom_pipe = $BottomPipe
 @onready var score_area = $ScoreArea

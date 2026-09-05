@@ -7,12 +7,20 @@
 [node name="Start" type="Node2D"]
 script = ExtResource("1_klqrd")
 
-[node name="Background" type="Sprite2D" parent="."]
-texture_filter = 1
-texture = ExtResource("1_u27ba")
-centered = false
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
 
-[node name="TextureButton" type="TextureButton" parent="."]
+[node name="Background" type="TextureRect" parent="CanvasLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_u27ba")
+expand_mode = 1
+stretch_mode = 6
+mouse_filter = 2
+
+[node name="TextureButton" type="TextureButton" parent="CanvasLayer"]
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -28,4 +36,4 @@ texture_normal = ExtResource("2_66bti")
 ignore_texture_size = true
 stretch_mode = 5
 
-[connection signal="pressed" from="TextureButton" to="." method="_on_texture_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/TextureButton" to="." method="_on_texture_button_pressed"]

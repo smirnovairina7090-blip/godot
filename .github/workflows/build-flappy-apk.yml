@@ -21,7 +21,7 @@ jobs:
       - name: Checkout branch
         uses: actions/checkout@v4
 
-      - name: Restore Godot project
+      - name: Restore and patch Godot project
         shell: bash
         run: |
           apt-get update
@@ -33,56 +33,23 @@ jobs:
           tar -xJf project.tar.xz -C project
           test -f project/project.godot
 
-          # Start every Android build from clean generated state.
-          rm -rf project/.godot project/.import project/android
+          rm -rf project/.godot project/.import project/android project/build
+          rm -f project/'труба зеленая.gd' project/'труба зеленая.tscn'
 
-          # Gradle/Godot Android asset merging can choke on non-ASCII resource paths.
-          # Rename the two Cyrillic resources and update every textual reference.
-          python3 - <<'PY'
-          from pathlib import Path
+          cp fixed-src/project.godot project/project.godot
+          cp fixed-src/start.gd project/start.gd
+          cp fixed-src/start.tscn project/start.tscn
+          cp fixed-src/node_2d.gd project/node_2d.gd
+          cp fixed-src/node_2d.tscn project/node_2d.tscn
+          cp fixed-src/CharacterBody2D.gd project/CharacterBody2D.gd
+          cp fixed-src/ParallaxBackground.gd project/ParallaxBackground.gd
+          cp fixed-src/pipe_green.gd project/pipe_green.gd
+          cp fixed-src/pipe_green.tscn project/pipe_green.tscn
 
-          root = Path("project")
-          renames = {
-              "труба зеленая.gd": "pipe_green.gd",
-              "труба зеленая.tscn": "pipe_green.tscn",
-          }
-
-          for old_name, new_name in renames.items():
-              old = root / old_name
-              new = root / new_name
-              if old.exists():
-                  old.rename(new)
-                  print(f"renamed: {old_name} -> {new_name}")
-
-          text_suffixes = {".gd", ".tscn", ".godot", ".cfg", ".tres"}
-          for path in root.rglob("*"):
-              if not path.is_file() or path.suffix.lower() not in text_suffixes:
-                  continue
-              try:
-                  text = path.read_text(encoding="utf-8")
-              except UnicodeDecodeError:
-                  continue
-              updated = text
-              for old_name, new_name in renames.items():
-                  updated = updated.replace(old_name, new_name)
-              if updated != text:
-                  path.write_text(updated, encoding="utf-8", newline="\n")
-                  print(f"updated refs: {path}")
-
-          remaining_non_ascii = [
-              str(path.relative_to(root))
-              for path in root.rglob("*")
-              if any(ord(ch) > 127 for ch in path.name)
-          ]
-          if remaining_non_ascii:
-              raise SystemExit("Non-ASCII project paths remain: " + ", ".join(remaining_non_ascii))
-          PY
-
-          test -f project/pipe_green.gd
-          test -f project/pipe_green.tscn
-          grep -R -n 'pipe_green.tscn' project --include='*.tscn' --include='*.gd' || true
           grep -F 'run/main_scene="res://start.tscn"' project/project.godot
-          grep -F 'config/features=PackedStringArray("4.1", "Mobile")' project/project.godot
+          grep -F 'window/handheld/orientation=1' project/project.godot
+          grep -F 'window/stretch/aspect="expand"' project/project.godot
+          grep -F 'path="res://pipe_green.tscn"' project/node_2d.tscn
           sed -i 's/package\/show_as_launcher_app=false/package\/show_as_launcher_app=true/' project/export_presets.cfg
           sed -i 's/gradle_build\/use_gradle_build=false/gradle_build\/use_gradle_build=true/' project/export_presets.cfg
           sed -i '/^\[rendering\]$/a textures/vram_compression/import_etc2_astc=true' project/project.godot
@@ -179,18 +146,23 @@ jobs:
         run: |
           export PATH="$JAVA_HOME/bin:$PATH"
           mkdir -p project/build
-          godot --headless --verbose --path project --export-debug "Android" build/flappy-debug.apk || true
-          if [ ! -s project/build/flappy-debug.apk ]; then
+          godot --headless --verbose --path project --export-debug "Android" build/flappy-portrait.apk || true
+          if [ ! -s project/build/flappy-portrait.apk ]; then
             echo "Gradle build log follows:"
             cat project/android/build/gradle-output.log || true
             exit 1
           fi
-          ls -lh project/build/flappy-debug.apk
+          ls -lh project/build/flappy-portrait.apk
+
+      - name: Verify portrait manifest
+        shell: bash
+        run: |
+          grep -F 'android:screenOrientation="portrait"' project/android/build/src/debug/AndroidManifest.xml
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: flappy-debug-apk
-          path: project/build/flappy-debug.apk
+          name: flappy-portrait-apk
+          path: project/build/flappy-portrait.apk
           if-no-files-found: error
           retention-days: 30

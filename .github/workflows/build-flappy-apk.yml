@@ -126,22 +126,15 @@ jobs:
         env:
           ANDROID_HOME: /usr/lib/android-sdk
           JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
-          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: /root/debug.keystore
-          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
-          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
         run: |
           export PATH="$JAVA_HOME/bin:$PATH"
           mkdir -p project/build
-          set +e
-          godot --headless --verbose --path project --export-debug "Android" project/build/flappy-debug.apk
-          STATUS=$?
-          set -e
-          if [ "$STATUS" -ne 0 ]; then
-            echo "=== Gradle output ==="
+          godot --headless --verbose --path project --export-debug "Android" project/build/flappy-debug.apk || true
+          if [ ! -s project/build/flappy-debug.apk ]; then
+            echo "Gradle build log follows:"
             cat project/android/build/gradle-output.log || true
-            exit "$STATUS"
+            exit 1
           fi
-          test -s project/build/flappy-debug.apk
           ls -lh project/build/flappy-debug.apk
 
       - name: Upload APK

@@ -1,0 +1,66 @@
+name: Build Flappy Android APK
+
+on:
+  push:
+    branches:
+      - flappy-apk
+    paths-ignore:
+      - "apk/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android-debug:
+    runs-on: ubuntu-24.04
+    container:
+      image: barichello/godot-ci:4.3
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+
+      - name: Restore Godot project
+        shell: bash
+        run: |
+          cat project.b64.01 project.b64.02 project.b64.03 project.b64.04 project.b64.05 project.b64.06 project.b64.07 project.b64.08 > project.tar.xz.b64
+          base64 -d project.tar.xz.b64 > project.tar.xz
+          echo "1c9efbafa034682680c34992a3dc38d108aba28b2115d3e7999a551be279e1af  project.tar.xz" | sha256sum -c -
+          mkdir -p project
+          tar -xJf project.tar.xz -C project
+          test -f project/project.godot
+          grep -F 'run/main_scene="res://start.tscn"' project/project.godot
+
+      - name: Setup Godot export environment
+        shell: bash
+        run: |
+          mkdir -p ~/.local/share/godot/export_templates
+          mkdir -p ~/.config
+          if [ -d /root/.local/share/godot/export_templates/4.3.stable ]; then
+            cp -a /root/.local/share/godot/export_templates/4.3.stable ~/.local/share/godot/export_templates/
+          fi
+          if [ -d /root/.config/godot ]; then
+            cp -a /root/.config/godot ~/.config/
+          fi
+          godot --version
+
+      - name: Import project resources
+        shell: bash
+        run: godot --headless --path project --editor --quit
+
+      - name: Build debug APK
+        shell: bash
+        run: |
+          mkdir -p project/build
+          godot --headless --verbose --path project --export-debug "Android" project/build/flappy-debug.apk
+          test -s project/build/flappy-debug.apk
+          ls -lh project/build/flappy-debug.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: flappy-debug-apk
+          path: project/build/flappy-debug.apk
+          if-no-files-found: error
+          retention-days: 30

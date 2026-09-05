@@ -55,7 +55,6 @@ jobs:
           export/android/timestamping_authority_url = ""
           export/android/shutdown_adb_on_exit = true
           EOF
-          sed -i 's|gradle_build/target_sdk=""|gradle_build/target_sdk="34"|' project/export_presets.cfg
           cat >> project/export_presets.cfg <<'EOF'
           keystore/debug="/root/debug.keystore"
           keystore/debug_user="androiddebugkey"

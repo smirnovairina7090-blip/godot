@@ -1,7 +1,7 @@
 extends Node2D
 
 @export var max_speed = 170.0
-@export var gap_size = 190.0
+@export var gap_size = 225.0
 @onready var top_pipe = $TopPipe
 @onready var bottom_pipe = $BottomPipe
 @onready var score_area = $ScoreArea
@@ -11,10 +11,11 @@ var score_added = false
 func _ready():
 	z_index = 10
 
-	# Force both pipes to use the same green texture at runtime.
-	# This also protects the Android build from any stale resource mapping.
+	# Keep the classic color scheme explicit at runtime:
+	# red pipe from above, green pipe from below.
+	var red_texture = load("res://pipe-red.png")
 	var green_texture = load("res://pipe-green.png")
-	$TopPipe/Sprite2D.texture = green_texture
+	$TopPipe/Sprite2D.texture = red_texture
 	$BottomPipe/Sprite2D.texture = green_texture
 
 	var view_height = get_viewport_rect().size.y

@@ -10,6 +10,13 @@ var score_added = false
 
 func _ready():
 	z_index = 10
+
+	# Force both pipes to use the same green texture at runtime.
+	# This also protects the Android build from any stale resource mapping.
+	var green_texture = load("res://pipe-green.png")
+	$TopPipe/Sprite2D.texture = green_texture
+	$BottomPipe/Sprite2D.texture = green_texture
+
 	var view_height = get_viewport_rect().size.y
 	var gap_center = randf_range(250.0, view_height - 300.0)
 	var half_pipe_height = 400.0
